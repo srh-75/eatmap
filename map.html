@@ -1,0 +1,100 @@
+<!-- http://pineplanter.moo.jp/non-it-salaryman/2016/09/16/open-street-map-marker/ -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>RAKURAKU EAT</title>
+  <link href="https://fonts.googleapis.com/css?family=Alegreya+Sans+SC:300" rel="stylesheet">
+  <style>
+    h2 { font-family: 'Alegreya Sans SC', sans-serif; }
+    p { font-family: 'Alegreya Sans SC', sans-serif; }
+    div {font-family: 'Alegreya Sans SC', sans-serif;}
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script type="text/javascript" src="http://www.openlayers.org/api/OpenLayers.js"></script>
+  <script>
+    function MapInit(){
+      //マップの初期化
+      map = new OpenLayers.Map("MapCanvas");
+
+      var mapnik = new OpenLayers.Layer.OSM();
+      map.addLayer(mapnik);
+      var lonLat = new OpenLayers.LonLat(140.11123762838469,36.08257376544683) //LonLat(経度, 緯度)
+        .transform(
+          new OpenLayers.Projection("EPSG:4326"), 
+          new OpenLayers.Projection("EPSG:900913")
+        );
+      map.setCenter(lonLat, 16); //12はズームサイズ
+
+      OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
+        initialize: function(options) {
+          this.handler = new OpenLayers.Handler.Click(
+            this, {
+              'click': this.onClick
+            }, this.handlerOptions
+          );
+        }, 
+
+        onClick: function(e) {
+          var lonlat = map.getLonLatFromPixel(e.xy);
+          lonlat.transform(
+            new OpenLayers.Projection("EPSG:900913"), 
+            new OpenLayers.Projection("EPSG:4326")
+          );
+
+          var markers = new OpenLayers.Layer.Markers("Markers");
+          map.addLayer(markers);
+          var marker = new OpenLayers.Marker(
+            new OpenLayers.LonLat(lonlat.lon, lonlat.lat)
+            .transform(
+              new OpenLayers.Projection("EPSG:4326"), 
+              new OpenLayers.Projection("EPSG:900913")
+            )
+          );
+          markers.addMarker(marker);
+          $("#LonLat").html("経度：" +lonlat.lon+ " 緯度：" +lonlat.lat);
+          document.myform.x.value = lonlat.lon;
+          document.myform.y.value = lonlat.lat;
+        }
+
+      });
+
+      var click = new OpenLayers.Control.Click();
+      map.addControl(click);
+      click.activate();
+
+    }
+    
+
+  </script>
+</head>
+<body>
+  <center>
+  <header>
+    <h2>RAKURAKU EAT</h2>
+    <p>This site recommends nearby restaurants.<br>Select a location on the map and press the GO button.</p>
+  </header>
+  
+  <div id="MapCanvas" style="width:400px;height:400px;" name='map'></div>  
+  <!--<div id="LonLat"></div>-->
+  <script type="text/javascript">MapInit();</script>
+  <br>
+  <form name="myform" method="GET" action="cgi-bin/result.cgi">
+    <div>
+    Search within a
+    <select type="text" name='range' >
+      <option value="1">0.3</option>
+      <option value="2">0.5</option>
+      <option value="3">1</option>
+      <option value="4">2</option>
+      <option value="5">3</option>
+    </select>
+    km radius
+    lng<input type="text" size="10" name="x">
+    lat<input type="text" size="10" name="y">
+    <input type="submit" value="GO">
+    </div>
+  </form>
+  </center>
+</body>
+</html>
